@@ -1,0 +1,873 @@
+---
+title: "AnalysisGeometridNoctuidMothsEcography"
+author: "Lea Heidrich" 
+date: "1 Februar 2021"
+output: html_document
+---
+
+# Description of RData:
+
+-   env: environmental variables, see Appendix S1
+-   moths\_agg\_fam: community weighted means, environmental variables, number of species, per plot, year and family, including the full gradient in 2016 (27+15 Plots)
+-   moths\_agg\_fam\_bal: just as above, but for balanced data (excluding the 15 plots sampled in 2016 only)
+-   moths\_M: species matrix, Geometridae & Noctuidae, years seperately (2x27+15 Plots)
+-   moths\_M\_bal: just as above, but without the 15 plots sampled in 2016 only
+-   species\_lvl: Species sampled in 2016 (full gradient) and 2007 (27+15 Plots) with abundances and habitat availability
+-   species\_lvl\_bal: Species equally sampled in 2016 and 2007 (27 Plots)
+-   traits: traits extracted from Potocky et al, Altermatt & Pearse and own measurements
+-   plots: list of plots sampled equally in both years
+
+load data and prepare graphical settings
+
+```{r}
+rm(list=ls())
+library(ggplot2)
+load("Input/GeoNoc.RData")
+pal <- c( "#67a9cf","#ef8a62")
+```
+
+# Environment
+
+Mean annual temperature and total annual precipitation per site were modelled based on a terrain height model (SRTM), data from 38 climate stations and additional 139 precipitation via extrapolation using ArcEGMO (Becker et al. 2002). Canopy cover was calculated for all single trees with a diameter at breast height of more than 7 cm in an area of 500 m² around site center. For each tree, canopy cover was calculated based on Pretzsch et al. (2002), summed over all species per plot and multiplied by 20 to gain canopy cover per hectare.
+
+### average values
+
+first line refers to the balances, second line to the full gradient, respectively. Note, that the latter includes modelled environmental information of the year 2007, though they had not been sampled
+
+```{r}
+
+env$year <- as.factor(env$year)
+
+aggregate(temperature_year ~ year, env[env$Plot%in%plots,], function(x){summary(x)})
+aggregate(temperature_year ~ year, env, function(x){summary(x)})
+
+aggregate(precipitation ~ year, env[env$Plot%in%plots,], function(x){summary(x)})
+aggregate(precipitation ~ year, env, function(x){summary(x)})
+
+aggregate(crown_cover_ha ~ year, env[env$Plot%in%plots,], function(x){summary(x)})
+aggregate(crown_cover_ha ~ year, env, function(x){summary(x)})
+```
+
+#### Climate and Canopy Cover along elevation (Appendix Figure S1.1, left)
+
+```{r}
+
+temp_ele <- ggplot(data=env, 
+                      aes(elevation, temperature_year,col=year)) +
+    scale_fill_manual(values = pal) +
+    scale_color_manual(values = pal) +
+  scale_x_continuous(breaks = seq(500, 1250, by = 250), limits = c(290,1370))+
+  scale_y_continuous(breaks = seq(5, 10, by = 1), limits = c(4,11))+
+  geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
+    geom_point(data=env[!env$Plot%in%plots&env$year==2016,], pch=17)+
+  geom_point(data=env[env$Plot%in%plots,], pch=19)+    
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2007,])+
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2016,])+
+  geom_smooth(data=env[env$year==2016,], lty=3)+
+  ylab("MAT (°C)")+
+  xlab("")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"),
+         axis.title.x=element_blank(),
+        axis.text.x  =element_blank(),
+        axis.ticks.x=element_blank(), plot.margin = unit(c(0,0,0,-1), "cm"),
+        legend.position="none")+
+  guides(size=FALSE)
+  
+precip_ele <- ggplot(data=env, 
+                      aes(elevation, precipitation,colour=year)) +
+    coord_cartesian(ylim=c(1000,2400))+
+  scale_x_continuous(breaks = seq(500, 1250, by = 250), limits = c(290,1370))+
+  scale_y_continuous(breaks = seq(1200, 2400, by = 400))+
+
+  geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
+    scale_fill_manual(values = pal) +
+    scale_color_manual(values = pal) +
+
+    geom_point(data=env[!env$Plot%in%plots&env$year==2016,], pch=17)+
+  geom_point(data=env[env$Plot%in%plots,], pch=19)+   
+    geom_smooth(data=env[env$Plot%in%plots&env$year==2007,])+
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2016,])+
+  geom_smooth(data=env[env$year==2016,], lty=3)+
+
+    ylab("Precipitation (mm)")+
+  xlab("")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"),
+        axis.title.x=element_blank(),
+        axis.text.x  =element_blank(),
+        axis.ticks.x=element_blank(), plot.margin = unit(c(0,0,0,-1), "cm"),
+        legend.position="none")+
+  guides(size=FALSE)
+
+cover_ele <- ggplot(data=env, 
+                      aes(elevation, crown_cover_ha,colour=year)) +
+
+    scale_color_manual(values = pal) +
+    scale_y_continuous(breaks = seq(0, 150, by = 50))+
+  coord_cartesian(ylim=c(0,150))+
+geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
+    geom_point(data=env[!env$Plot%in%plots&env$year==2016,], pch=17)+
+  geom_point(data=env[env$Plot%in%plots,], pch=19)+    
+    geom_smooth(data=env[env$Plot%in%plots&env$year==2007,])+
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2016,])+
+  geom_smooth(data=env[env$year==2016,], lty=3)+
+  ylab("Crown cover (%)")+
+  xlab("Elevation (m a.s.l)")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"),plot.margin = unit(c(0,0,0,-1), "cm"),
+        legend.position="none")+
+  guides(size=FALSE)
+
+```
+
+#### Climate and Canopy Cover between both years (Appendix Figure S1.1, right)
+
+```{r}
+btemp <-  ggplot(env[env$Plot%in%plots,],
+             aes(x=year, y=temperature_year, fill=year)) + 
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(breaks = seq(5, 10, by = 1), limits = c(4,11))+
+  ylab("")+xlab("")+
+  geom_boxplot(position=position_dodge(0.3))+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.title=element_blank(),
+        axis.text  =element_blank(),
+        axis.ticks=element_blank(),
+        plot.margin = unit(c(0,-1,0,0), "cm"),
+        legend.position="none")
+
+bprecip <-  ggplot(env[env$Plot%in%plots,],
+             aes(x=year, y=precipitation, fill=year)) + 
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(breaks = seq(1200, 2400, by = 400), limits = c(1000,2400))+
+  ylab("")+xlab("")+
+  geom_boxplot(position=position_dodge(0.3))+
+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.title=element_blank(),
+        axis.text  =element_blank(),
+        axis.ticks=element_blank(),
+        plot.margin = unit(c(0,-1,0,0), "cm"),
+        legend.position="none")
+
+bcover <-  ggplot(env[env$Plot%in%plots,],
+             aes(x=year, y=crown_cover_ha, fill=year)) + 
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(breaks = seq(0, 150, by = 50), limits = c(-10,150))+
+  ylab("")+xlab("Year")+
+  geom_boxplot(position=position_dodge(0.3))+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"),axis.title.y=element_blank(),
+        axis.text.y  =element_blank(),
+        axis.ticks.y=element_blank(),plot.margin = unit(c(0,-1,0,0), "cm"),
+        legend.position="none")
+```
+
+combine graphs
+
+```{r}
+library(patchwork)
+
+AppFig1 <- 
+  temp_ele+btemp+
+  precip_ele+bprecip+
+  cover_ele+bcover+ 
+    plot_layout(widths = c(2, 1))
+
+ggsave("Output/Appendix_Figure1.tiff",dpi=900,
+       width = 166,height=160, unit="mm")
+
+rm(temp_ele, btemp, precip_ele, bprecip, cover_ele, bcover, AppFig1)
+```
+
+# Ecological differences between families
+
+#### species level differences in colour lightness and wing span between families
+
+t-tests to evaluate the differences in both traits:
+
+```{r}
+summary(traits$meanRGB);sd(traits$meanRGB)
+t.test(meanRGB~Family,data=traits)
+
+summary(traits$Wing.span);sd(traits$Wing.span)
+t.test(Wing.span~Family,data=traits)
+
+aggregate(meanRGB ~ Family, traits, function(x){paste0(round(mean(x),2), " +/- ", round(sd(x),2))})
+aggregate(Wing.span ~ Family, traits, function(x){paste0(round(mean(x),2), " +/- ", round(sd(x),2))})
+```
+
+create the graph (Main Figure 2)
+
+```{r}
+library(plyr)
+hRGB <- ggplot(traits,
+       aes(x = meanRGB, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 30, 5), limits=c(0, 30))+
+  geom_histogram(colour="black",  position = "dodge") +
+  geom_vline(data=plyr::ddply(traits, 
+                              "Family",summarize, grp.mean=mean(meanRGB, na.rm=T)),
+             aes(xintercept=grp.mean), colour=pal,
+             linetype="dashed", lwd = 1.5) +
+  scale_fill_manual(breaks = "Family",values = pal)+
+  xlab("meanRGB") +
+  theme_classic()+ theme(legend.position = "none")
+
+hwing <- ggplot(traits, 
+       aes(x = Wing.span, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 30, 5), limits=c(0, 30))+
+  geom_histogram(colour="black",  position = "dodge") +
+  geom_vline(data=plyr::ddply(traits, 
+                              "Family", summarise, grp.mean=mean(Wing.span)),
+             aes(xintercept=grp.mean),
+             linetype="dashed", color=pal,lwd = 1.5) +
+  scale_fill_manual(breaks = "Family",values = pal)+
+  xlab("Wing span") +
+  theme_classic()+ theme(legend.position = "none")
+
+
+hwing+hRGB+  plot_annotation(tag_levels = 'a')
+
+
+ggsave("Output/Main_Figure2.tiff",dpi=900,
+       width = 166,height=80, unit="mm")
+
+rm(hwing, hRGB)
+```
+
+### Differences in life history
+
+traits extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>
+
+Kruskal-Wallis test to for differences related to voltinism and overwintering stage and percentages per level. Species which are overwintering as larvae or pupae (in Potocky marked as Overwintering =2.5) were considered as species overwintering as larvae
+
+```{r}
+
+kruskal.test(Voltinism ~ Family,
+             data = traits)
+t <-  table(traits$Family,
+      traits$Voltinism)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,]) 
+
+
+traits[which(traits$Overwintering>=2&traits$Overwintering<3),"Overwintering"] <- 2
+traits$Overwintering <- as.factor(as.character(traits$Overwintering))
+
+kruskal.test(Overwintering ~ Family,
+             data = traits)
+t <-  table(traits$Family,
+            traits$Overwintering)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,]) 
+
+
+```
+
+graph the results (Appendix Figure S2.1)
+
+```{r}
+traits$Voltinism <- as.factor(as.character(traits$Voltinism))
+
+bvolt <- ggplot(na.omit(traits[,c("Family", "Voltinism")]), 
+       aes(x = Voltinism, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 200, 50), limits=c(0, 200))+
+  geom_bar(colour="black") +
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  xlab("Generations per year") +
+  theme_classic()+ theme(legend.position = "none")
+
+bwinter <- ggplot(na.omit(traits[,c("Family", "Overwintering")]), 
+       aes(x = Overwintering, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 200, 50), limits=c(0, 200))+
+  scale_fill_manual(breaks = "Family",values = pal)+
+  scale_x_discrete(breaks=c("1","2","3", "4"),
+        labels=c("egg", "larvae", "pupae", "imago"))+
+  geom_bar(colour="black") +
+  xlab("Overwintering stage") +
+  theme_classic()+
+  theme(axis.title.y=element_blank(),
+        axis.text.y  =element_blank(),
+        axis.ticks.y=element_blank(),plot.margin = unit(c(0,-1,0,0), "cm"))
+
+bvolt+bwinter+  plot_annotation(tag_levels = 'a')
+
+ggsave("Output/Appendix_S2_lifehistory.tiff",dpi=900,
+       width = 166,height=100, unit="mm")
+rm(bvolt, bwinter)
+
+```
+
+### traits related to feeding
+
+Preferred host plant form, trophic range and whether adults are feeding were extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>. Only three species are not feeding as adults. Thus, differences in adult feeding were not depicted. Information about the number of plant species which the adults visit were taken from Altermatt & Pearse (2011) <https://pubmed.ncbi.nlm.nih.gov/21828993/>
+
+Kruskal-Wallis test to test for differences related to voltinism and overwintering stage and percentages per level. A generalized linear model with poisson distribution was used to test for differences in the number of (nectar) plant species.
+
+```{r}
+traits$Host_form <- as.factor(as.character(traits$Host_form))
+kruskal.test(Host_form ~ Family,
+             data = traits[traits$Host_form!=5,])
+t <-  table(traits$Family,
+      traits$Host_form)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,]) 
+
+kruskal.test(Adult_feeding ~ Family,
+             data = traits)
+t <-  table(traits$Family,
+      traits$Trophic.range)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,])
+
+kruskal.test(Trophic.range ~ Family,
+             data = traits)
+t <-  table(traits$Family,
+      traits$Trophic.range)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,])
+
+
+nectr <- glm(Nr_Ahost~Family, data=traits, family="poisson")
+summary(nectr)
+```
+
+graph the results (Appendix Figure S2.2)
+
+```{r}
+bhost <- ggplot(na.omit(traits[,c("Family", "Host_form")]), 
+       aes(x = Host_form, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 150, 50), limits=c(0, 150))+
+  geom_bar(colour="black") +
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  xlab("host plant form") +
+  scale_x_discrete(breaks=c("1","2","3","4","5"),
+        labels=c("forbs", "grasses", "shrubs", "trees", "lichens"))+
+  theme_classic()+ theme(legend.position = "none",axis.text.x = element_text(angle = 45, hjust = 1))
+
+traits$Trophic.range <- as.factor(as.character(traits$Trophic.range))
+btrophic <- ggplot(na.omit(traits[,c("Trophic.range", "Family")]), 
+       aes(x = Trophic.range, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 150, 50), limits=c(0, 150))+
+  geom_bar(colour="black") +
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  scale_x_discrete(breaks=c("1","2","3"), labels=c("monophagous", "oligophagous", "polyphagous"))+
+  xlab("trophic range") +
+  theme_classic()+ theme(legend.position = "none", axis.text.y=element_blank(),
+                         axis.title.y = element_blank(),
+                         axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.y=element_blank(),plot.margin = unit(c(0,-1,0,0), "cm"))
+
+
+traits$Nr_Ahost <- log(traits$Nr_Ahost+1)
+
+bAhost <- ggplot(traits, 
+       aes(x = Family, y= Nr_Ahost, fill = Family))+
+  geom_boxplot() +
+  scale_y_continuous(breaks=c(0,0.8109302,1.252763,1.791759,2.397895,3.044522,3.713572), labels=c("0","1.25","2.5","5","10","20","40"))+
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  ylab("Number of nectar plants")+
+  theme_classic()+ theme(legend.position = "none")
+
+
+bhost+btrophic+bAhost+  plot_annotation(tag_levels = 'a')
+ggsave("Output/Appendix_S2_feeding.tiff",dpi=900,
+       width = 166,height=80, unit="mm")
+
+rm(bhost,btrophic,bAhost)
+```
+
+### traits related to habitat / canopy cover
+
+Preferred habitat type were extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>. Habitat is ranked from 1 = grass- over 2= shrub- to 3 = woodland, though intermediate ranks are also given in Potocky et al (2018). For simplification, we rounded those intermediate levels of for the kruskal-wallis test. To evaluate the effect of preferred habitat type on color lightness and wing span, we simplified these level even more and aggregated the habitat types grass- and shrubland to the category "open habitat". The effect of the preferred habitat type on both traits was tested using a linear model, which included family as interaction term
+
+```{r}
+traits[which(findInterval(traits$Habitat_3D, c(1, 1.51))==1L),"Habitat_3D"] <- 1
+traits[which(findInterval(traits$Habitat_3D, c(1.51, 2.4))==1L),"Habitat_3D"] <-2
+traits[which(findInterval(traits$Habitat_3D, c(2.5, 3))==1L),"Habitat_3D"] <-3
+
+kruskal.test(Habitat_3D ~ Family,
+             data = traits[traits$Species%in%spec_bal,])#plot(habitat)
+
+t <-  table(traits$Family,
+            traits$Habitat_3D)
+t[1,]/sum(t[1,]);t[2,]/sum(t[2,]) 
+
+traits$habitat <- NA
+traits[which(traits$Habitat_3D <=2),"habitat"] <- "open"
+traits[which(traits$Habitat_3D >2),"habitat"] <- "closed"
+
+traits$habitat <- as.factor(traits$habitat)
+traits$Family <- as.factor(traits$Family)
+
+
+habitatColFam <- lm(meanRGB ~ habitat*Family, data=traits)
+summary(habitatColFam)
+
+habitatWingFam <- lm(Wing.span ~ habitat*Family, data=traits)
+summary(habitatWingFam)
+```
+
+plot it
+
+```{r}
+
+bHab <- ggplot(na.omit(traits[,c("Habitat_3D", "Family")]), 
+                aes(x = Habitat_3D, fill = Family))+
+  scale_y_continuous(breaks=seq(0, 150, 50), limits=c(0, 170))+
+  geom_bar(colour="black") +
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  scale_x_discrete(breaks=c("1","2","3"), labels=c("grassland", "shrubland", "woodland"))+
+  xlab("Habitat preference") +
+  theme_classic()+ theme(legend.position = "none",axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank())
+
+habcolFam <- ggplot(aes(y = meanRGB, x = habitat), data = na.omit(traits[,c("habitat", "Family", "meanRGB")]))+ geom_boxplot(aes(fill = Family))+
+  scale_fill_manual(breaks = "Familie",values = pal)+
+  ylab("mean RGB")+
+  #stat_summary(fun.data=mean_se, colour="black", geom="errorbar", width=0.1 ) +
+  #stat_summary(fun=mean, colour="black", geom="point") +
+  theme_classic()+ theme(legend.position = "none", axis.title.x = element_blank())
+
+habWingFam <- ggplot(aes(y = Wing.span, x = habitat), data = na.omit(traits[,c("habitat", "Family", "Wing.span")]))+ geom_boxplot(aes(fill = Family))+
+  scale_fill_manual(breaks = "Familie",values = pal)+
+    xlab("Habitat preference") +
+  ylab("Wing span (mm)")+
+  theme_classic()+ theme(legend.position = "none")
+
+bHab+habWingFam+habcolFam+  plot_annotation(tag_levels = 'a')
+ggsave("Output/Appendix_S2_habitats.tiff",dpi=900,
+       width = 166,height=80, unit="mm")
+
+rm(bHab, habWingFam,habcolFam)
+```
+
+moreover, we wanted to assess whether host plant availability misses important aspects of habitat availability. We thus tested, whether the preferred host form correlated with the preferred habitat openess
+
+```{r}
+kruskal.test(Host_form ~ habitat, data=traits)
+HabHost <- ggplot(na.omit(traits[,c("habitat", "Host_form")]), 
+                aes(x = Host_form, fill = habitat))+
+  scale_y_continuous(breaks=seq(0, 150, 50), limits=c(0, 170))+
+  geom_bar(colour="black") +
+  scale_fill_manual(breaks = "habitat",values = c("darkgreen","lightgreen"))+
+  scale_x_discrete(breaks=c("1","2","3","4","5"),
+        labels=c("forbs", "grasses", "shrubs", "trees", "lichens"))+
+  xlab("Habitat preference") +
+  theme_classic()+ theme(legend.position = "none",axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank())
+
+ggsave("Output/Appendix_HabHost.png",dpi=900,
+       width = 80,height=80, unit="mm")
+rm(HabHost)
+```
+
+# ANALYIS I: Community weighted means
+
+The relationship between community-weighted means and elevation was assessed using linear models. Primarily, we wanted to assess whether both families show any significant cline in their community weighted means along elevation (RGB1, Wing1). In a second step, we evaluated whether the slopes differ between both families by evaluating the significance of interaction between elevation and the factor family (RGB2, Wing2). Lastly, we evaluated whether the family-specific slopes change significantly between sampling years (RGB3, Wing3).
+
+### wing span
+
+```{r}
+
+moths_agg_fam_bal$year <- as.factor(as.character(moths_agg_fam_bal$year))
+moths_agg_fam_bal$elevation100 <- moths_agg_fam_bal$elevation/100
+
+
+# check, whether the slopes per family&year are significant 
+wing1 <- lm(wing_w~Family+year+
+             Family:year:elevation100,
+           data =moths_agg_fam_bal)
+summary(wing1) #grp wise slopes + intercepts
+
+
+wing2 <- lm(wing_w~year+Family*elevation100,
+           data =moths_agg_fam_bal)
+summary(wing2) # test whether resp. differs between groups (over the years)
+
+wing3 <- lm(wing_w~ Family+
+             year*Family:elevation100, 
+           data =moths_agg_fam_bal)
+summary(wing3) # test whether resp. within families differs between years
+```
+
+### color lightness
+
+```{r}
+RGB1 <- lm(meanRGB_w~Family+year+
+             Family:year:elevation100,
+           data =moths_agg_fam_bal)
+summary(RGB1) #grp wise slopes + intercepts
+
+RGB2 <- lm(meanRGB_w~year+Family*elevation100,
+           data =moths_agg_fam_bal)
+summary(RGB2) # test whether resp. differs between groups (over the years)
+
+RGB3 <- lm(meanRGB_w~ Family+
+             year*Family:elevation100, 
+           data =moths_agg_fam_bal)
+summary(RGB3)
+
+```
+
+plot cwm along elevation
+
+```{r}
+Wing_bal <- ggplot(data=moths_agg_fam_bal, 
+             aes(elevation, wing_w,colour=Family)) + geom_point(aes(size = nspec, pch=year)) +
+  scale_colour_manual(breaks = "Family",values = pal) +
+  ylab("Wing span (mm)")+
+  scale_y_continuous(breaks = seq(25, 45, by = 5), limits = c(24,46))+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae"&moths_agg_fam_bal$year=="2007",],method="lm", lty=3,se=F, col="grey")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae"&moths_agg_fam_bal$year=="2016",],method="lm", se=F, col="grey")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae"&moths_agg_fam_bal$year=="2007",],method="lm",lty=3, se=F, col="black")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae"&moths_agg_fam_bal$year=="2016",],method="lm", se=F, col="black")+
+  xlab("elevation (m a.s.l)")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))+
+  guides(size=FALSE)
+
+RGB_bal <- ggplot(data=moths_agg_fam_bal, 
+             aes(elevation, meanRGB_w,colour=Family)) + geom_point(aes(size = nspec, pch=year)) +
+  scale_colour_manual(breaks = "Family",values = pal) +
+  ylab("mean RGB")+
+  scale_y_continuous(breaks = seq(0.45, 0.65, by = 0.05), limits = c(0.43,0.67))+
+    xlab("elevation (m a.s.l)")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae"&moths_agg_fam_bal$year=="2007",],method="lm", lty=3,se=F, col="black")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae"&moths_agg_fam_bal$year=="2016",],method="lm", se=F, col="grey")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae"&moths_agg_fam_bal$year=="2007",],method="lm",lty=3, se=F, col="black")+
+  geom_smooth(data=moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae"&moths_agg_fam_bal$year=="2016",],method="lm", se=F, col="black")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))
+```
+
+test for differances in average colour lightness between both years
+
+```{r}
+
+t.test(meanRGB_w~year, data =moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae",])
+t.test(meanRGB_w~year, data =moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae",])
+t.test(wing_w~year, data =moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae",])
+t.test(wing_w~year, data =moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae",])
+
+
+```
+
+plot differences between the years
+
+```{r}
+Wing_year <- ggplot(moths_agg_fam_bal,
+             aes(x=year, y=wing_w, fill=Family)) + 
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(breaks = seq(25, 45, by = 5), limits = c(24,46))+
+  ylab("")+
+  geom_boxplot(position=position_dodge(0.3))+
+  guides(fill = "legend")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))
+
+RGB_year <- ggplot(moths_agg_fam_bal,
+             aes(x=year, y=meanRGB_w, fill=Family)) + 
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(breaks = seq(0.45, 0.65, by = 0.05), limits = c(0.43,0.67))+
+  ylab("")+
+  geom_boxplot(position=position_dodge(0.3))+
+  guides(fill = "legend")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))
+
+```
+
+combine figures (Main Figure 3)
+
+```{r}
+library(cowplot)
+
+prow <- plot_grid(Wing_bal+ theme(legend.position="none"), Wing_year+ 
+                    theme(legend.position="none"), RGB_bal+ theme(legend.position="none"), RGB_year+theme(legend.position="none"), labels = c('A',"", 'B',""),ncol = 2, nrow=2, align = "v", rel_widths = c(1,1))
+
+legend_p <- get_legend(
+  Wing_bal+
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
+
+legend_b <- get_legend(
+Wing_year+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
+
+
+lrow <- plot_grid(legend_b, legend_p, ncol = 2)
+
+f2 <- plot_grid(prow, lrow,ncol = 1, rel_heights = c(1, .1))
+
+ggsave("Output/Main_Figure3.png",dpi=900,
+       width = 166,height=170, unit="mm")
+
+```
+
+### test the cwm along elevation for the full gradient sampled in 2016
+
+first row: test whether the family-specific slopes differs significantly from zero. second row: test whether families differ in slopes
+
+```{r}
+summary(lm(wing_w~Family+Family:elevation,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+summary(lm(wing_w~elevation*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+
+summary(lm(meanRGB_w~Family+Family:elevation,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+summary(lm(meanRGB_w~elevation*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+```
+
+full gradient plot
+
+```{r}
+
+moths_agg_fam$gradient <- "full"
+moths_agg_fam[which(moths_agg_fam$Plot%in%plots),"gradient"] <- "balanced"
+
+Wing_full <- ggplot(data=moths_agg_fam[moths_agg_fam$year==2016,], 
+             aes(elevation, wing_w,colour=Family)) + geom_point(aes(size = nspec, pch=gradient)) +
+  scale_colour_manual(breaks = "Family",values = pal) +
+  ylab("Wing span")+
+  scale_y_continuous(breaks = seq(25, 45, by = 5), limits = c(24,46))+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Geometridae"&moths_agg_fam$gradient=="balanced",],method="lm", se=F, col="grey")+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Geometridae",],method="lm", se=F, col="black", lty=3)+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Noctuidae"&moths_agg_fam$gradient=="balanced",],method="lm", se=F, col="black")+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Noctuidae",],method="lm", se=F, col="black")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))
+
+
+
+RGB_full <- ggplot(data=moths_agg_fam[moths_agg_fam$year==2016,], 
+             aes(elevation, meanRGB_w,colour=Family)) + geom_point(aes(size = nspec, pch=gradient)) +
+  scale_colour_manual(breaks = "Family",values = pal) +
+  ylab("mean RGB")+
+  scale_y_continuous(breaks = seq(0.45, 0.65, by = 0.05), limits = c(0.43,0.67))+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Geometridae"&moths_agg_fam$gradient=="balanced",],method="lm", se=F, col="black")+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Geometridae",],method="lm", se=F, col="black", lty=3)+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Noctuidae"&moths_agg_fam$gradient=="balanced",],method="lm", se=F, col="grey")+
+  geom_smooth(data=moths_agg_fam[moths_agg_fam$Family=="Noctuidae",],method="lm", se=F, col="grey")+
+  theme(panel.background = element_rect(fill = "white", colour = "black"),
+        axis.text = element_text(colour="black"))
+
+
+legend_p <- get_legend(
+  Wing_full+
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
+
+
+lrow2 <- plot_grid(legend_b, legend_p, ncol = 2)
+
+long2016 <- plot_grid(Wing_full+ theme(legend.position="none"), RGB_full+ theme(legend.position="none"), labels = c('A', 'B'),ncol = 2,  align = "v", rel_widths = c(1,1))
+long2016 <- plot_grid(long2016, lrow2,ncol = 1, rel_heights = c(1, .1))
+long2016
+
+ggsave("Output/Appendix_S4_longgradient.tiff",dpi=900,
+       width = 166,height=170, unit="mm")
+rm(lrow2, long2016, Wing_full, RGB_full)
+```
+
+## hierarchial partitioning
+
+we conducted hierarchial partitioning to estimate the relative importance of the co-varying environmental variables on the color lightness and body size of geometrid and noctuid moth assemblages
+
+```{r}
+
+#install.packages("hier.part")
+library(hier.part)
+moths_agg_fam_bal$c_temperature_year <- scale(moths_agg_fam_bal$temperature_year)
+moths_agg_fam_bal$c_precipitation <- scale(moths_agg_fam_bal$precipitation)
+moths_agg_fam_bal$c_crown_cover_ha <- scale(moths_agg_fam_bal$crown_cover_ha)
+
+Noctuid <- droplevels(moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae",])
+hipaWing_Noc <- hier.part(Noctuid$wing_w, Noctuid[,c("c_temperature_year", "c_precipitation", "c_crown_cover_ha")])
+hipaRGB_Noc <- hier.part(Noctuid$wing_w, Noctuid[,c("temperature_year", "precipitation", "crown_cover_ha")])
+
+
+Geometrid <- droplevels(moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometridae",])
+hipaWing_Geo <- hier.part(Geometrid$wing_w, Geometrid[,c("temperature_year", "precipitation", "crown_cover_ha")])
+hipaRGB_Geo <- hier.part(Geometrid$wing_w, Geometrid[,c("temperature_year", "precipitation", "crown_cover_ha")])
+```
+
+# 4th corner analysis
+
+```{r}
+library(ade4)
+Geo <- as.character(traits[traits$Family=="Geometridae","Species"])
+Noc <- as.character(traits[traits$Family=="Noctuidae","Species"])
+
+elevation <- env[,c("Plot","elevation")]
+elevation <- env[!duplicated(env$Plot),]
+elevation$elevation100 <- elevation$elevation/100
+
+
+
+LG07 <- moths_M_bal[moths_M_bal$year==2007,names(moths_M_bal)%in%c("Plot",Geo)]
+LG16 <- moths_M_bal[moths_M_bal$year==2016,names(moths_M_bal)%in%c("Plot",Geo)]
+
+LN07 <- moths_M_bal[moths_M_bal$year==2007,names(moths_M_bal)%in%c("Plot",Noc)]
+LN16 <- moths_M_bal[moths_M_bal$year==2016,names(moths_M_bal)%in%c("Plot",Noc)]
+
+rownames(LG07) <- LG07$Plot; LG07 <- LG07[,-1]
+rownames(LG16) <- LG16$Plot; LG16 <- LG16[,-1]
+rownames(LN07) <- LN07$Plot; LN07 <- LN07[,-1]
+rownames(LN16) <- LN16$Plot; LN16 <- LN16[,-1]
+
+
+QG07 <- traits[traits$Species%in%colnames(LG07),c("meanRGB","Wing.span"),drop=F]
+QG07 <- scale(QG07)
+RG07 <- elevation[elevation$Plot%in%row.names(LG07),c("elevation100"),drop=F]
+fcG07 <- fourthcorner(data.frame(RG07), data.frame(LG07), data.frame(QG07),nrepet = 9999)
+
+QG16 <- traits[traits$Species%in%colnames(LG16),c("meanRGB","Wing.span"),drop=F]
+QG16 <- scale(QG16)
+RG16 <- elevation[elevation$Plot%in%row.names(LG16),c("elevation100"),drop=F]
+fcG16 <- fourthcorner(data.frame(RG16), data.frame(LG16), data.frame(QG16),nrepet = 9999)
+
+QN07 <- traits[traits$Species%in%colnames(LN07),c("meanRGB","Wing.span"),drop=F]
+QN07 <- scale(QN07)
+RN07 <- elevation[elevation$Plot%in%row.names(LN07),c("elevation100"),drop=F]
+fcN07 <- fourthcorner(data.frame(RN07), data.frame(LN07), data.frame(QN07),nrepet = 9999)
+
+QN16 <- traits[traits$Species%in%colnames(LN16),c("meanRGB","Wing.span"),drop=F]
+QN16 <- scale(QN16)
+RN16 <- elevation[elevation$Plot%in%row.names(LN16),c("elevation100"),drop=F]
+fcN16 <- fourthcorner(data.frame(RN16), data.frame(LN16), data.frame(QN16),nrepet = 9999)
+
+summary(fcG07)
+summary(fcG16)
+summary(fcN07)
+summary(fcN16)
+
+```
+
+the full gradient
+
+```{r}
+
+LG16 <- moths_M[moths_M$year==2016,names(moths_M)%in%c("Plot",Geo)]
+rownames(LG16) <- LG16$Plot; LG16 <- LG16[,-1]
+
+QG16 <- traits[traits$Species%in%colnames(LG16),c("meanRGB","Wing.span"),drop=F]
+QG16 <- scale(QG16)
+RG16 <- elevation[elevation$Plot%in%row.names(LG16),c("elevation100"),drop=F]
+fcG16 <- fourthcorner(data.frame(RG16), data.frame(LG16), data.frame(QG16),nrepet = 9999)
+summary(fcG16)
+
+
+# Noctuids
+
+LN16 <- moths_M[moths_M$year==2016,names(moths_M)%in%c("Plot",Noc)]
+rownames(LN16) <- LN16$Plot; LN16 <- LN16[,-1]
+QN16 <- traits[traits$Species%in%colnames(LN16),c("meanRGB","Wing.span"),drop=F]
+QN16 <- scale(QN16)
+RN16 <- elevation[elevation$Plot%in%row.names(LN16),c("elevation100"),drop=F]
+fcN16 <- fourthcorner(data.frame(RN16), data.frame(LN16), data.frame(QN16),nrepet = 9999)
+summary(fcN16)
+
+```
+
+# SPECIES-LVL MODELL
+
+#### Datapreparation
+
+to simplify / speed up model covergence, environmental variables were converted to be in a similar range. Moreover, we excluded all species occuring in less than three plots per year.
+
+```{r}
+
+species_lvl_bal$elevation <- as.numeric(species_lvl_bal$elevation)
+species_lvl_bal$elevation100 <-species_lvl_bal$elevation/100
+species_lvl_bal$year <- as.factor(as.character(species_lvl_bal$year))
+species_lvl_bal$Family <- as.factor(species_lvl_bal$Family)
+species_lvl_bal$hab_av100 <- species_lvl_bal$hab_av/100
+
+dat <- tapply(species_lvl_bal[species_lvl_bal$abundance>=1,"Plot"], INDEX = list(species_lvl_bal[species_lvl_bal$abundance>=1,"Species"],species_lvl_bal[species_lvl_bal$abundance>=1,"year"] ), length)
+hist(dat)
+
+
+dat <- dat[apply(dat, MARGIN = 1, function(x) all(x > 3)), ]    #only species occuring on more than
+incl <- rownames(dat)
+incl <- incl[!is.na(incl)]
+species_lvl_bal <- species_lvl_bal[species_lvl_bal$Species%in%incl,]
+length(unique(species_lvl_bal$Species)) 
+
+# centre variables
+species_lvl_bal[,paste0("c_", c("meanRGB", "Wing.span", "elevation","elevation100", "hab_av", "hab_av100"))] <- 
+  apply(species_lvl_bal[, c("meanRGB", "Wing.span", "elevation","elevation100" ,"hab_av", "hab_av100")], 2, function(x)scale(x, scale=F))
+
+species_lvl_bal$Species <- as.factor(species_lvl_bal$Species)
+species_lvl_bal$Genus <- unlist(lapply(strsplit(as.character(species_lvl_bal$Species), "_"), "[[",1)) 
+species_lvl_bal <- species_lvl_bal[!is.na(species_lvl_bal$hab_av),]
+# xestia baja
+```
+
+in a next step, we modelled abundance along elevation to check, whether we can assume linear relationships in the analysis
+
+```{r}
+
+library("mgcv")
+library("mgcViz")
+
+species_lvl$Species <- as.factor(species_lvl$Species)
+
+
+species_lvl$elevation <- as.numeric(species_lvl$elevation)
+species_lvl$elevation100 <-species_lvl$elevation/100
+species_lvl$year <- as.factor(as.character(species_lvl$year))
+species_lvl$Family <- as.factor(species_lvl$Family)
+species_lvl$hab_av100 <- species_lvl$hab_av/100
+
+
+model.ele.g07 <- gam(abundance ~ s(elevation100)+s(Species, bs="re"), data=species_lvl[species_lvl$Family=="Geometridae"&species_lvl$year=="2007",], family="poisson")
+model.ele.g16 <- gam(abundance ~ s(elevation100)+s(Species, bs="re"), data=species_lvl[species_lvl$Family=="Geometridae"&species_lvl$year==2016,], family="poisson")
+model.ele.n07 <- gam(abundance ~ s(elevation100)+s(Species, bs="re"), data=species_lvl[species_lvl$Family=="Noctuidae"&species_lvl$year==2007,], family="poisson")
+model.ele.n16 <- gam(abundance ~ s(elevation100)+s(Species, bs="re"), data=species_lvl[species_lvl$Family=="Noctuidae"&species_lvl$year==2016,], family="poisson")
+
+
+
+peg07 <- getViz(model.ele.g07)
+peg16 <- getViz(model.ele.g16)
+pen07 <- getViz(model.ele.n07)
+pen16 <- getViz(model.ele.n16)
+
+plot(peg07, select = 1) + l_points() + l_fitLine() + l_ciLine()+ylim(-8,10)
+plot(peg16, select = 1) + l_points() + l_fitLine() + l_ciLine()+ylim(-8,10)
+plot(pen07, select = 1) + l_points() + l_fitLine() + l_ciLine()+ylim(-8,10)
+plot(pen16, select = 1) + l_points() + l_fitLine() + l_ciLine()+ylim(-8,10)
+
+```
+
+### model for the balanced data
+
+```{r}
+library(glmmTMB)
+tnbin2_orig <-  glmmTMB(abundance ~  
+                        year+Family+ #collinearity problems....sollte aber eigtl rein
+                    year:Family:c_hab_av100+ 
+                    year:Family:c_elevation100+ 
+                    c_Wing.span:year:Family:c_elevation100+                               c_meanRGB:year:Family:c_elevation100+(1|Species),
+                  ziformula=~.,
+                  data=species_lvl_bal,family="truncated_nbinom2")
+summary(tnbin2_orig)
+```
+
+### model for full gradient 2016
+
+here, only species used in the balanced analysis were included
+
+```{r}
+
+species_lvl <- droplevels(species_lvl[species_lvl$year==2016,])
+species_lvl <- droplevels(species_lvl[species_lvl$Species%in%incl,])
+
+# centre variables
+species_lvl[,paste0("c_", c("meanRGB", "Wing.span", "elevation","elevation100", "hab_av", "hab_av100"))] <- 
+  apply(species_lvl[, c("meanRGB", "Wing.span", "elevation","elevation100" ,"hab_av", "hab_av100")], 2, function(x)scale(x, scale=F))
+
+tnbin2_2016_full <-  glmmTMB(abundance ~  
+                        Family+ #collinearity problems....sollte aber eigtl rein
+                    Family:c_hab_av100+ 
+                    Family:c_elevation100+ 
+                    c_Wing.span:Family:c_elevation100+                               c_meanRGB:Family:c_elevation100+(1|Species),
+                  ziformula=~.,
+                  data=species_lvl,family="truncated_nbinom2")
+summary(tnbin2_2016_full)
+```
