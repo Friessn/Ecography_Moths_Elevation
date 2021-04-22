@@ -1,10 +1,10 @@
 ---
-title: "AnalysisGeometridNoctuidMothsEcography"
-author: "Lea Heidrich"
+title: "Noctuid and geometrid moth assemblages show divergent elevational gradients in body size and color lightness"
+author: "Lea Heidrich and Nicolas Friess"
 date: "1 Februar 2021"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 # Description of RData:
@@ -686,7 +686,7 @@ long2016 <- plot_grid(Wing_full+ theme(legend.position="none"), RGB_full+ theme(
 long2016 <- plot_grid(long2016, lrow2,ncol = 1, rel_heights = c(1, .1))
 long2016
 
-ggsave("Output/Appendix_S4_longgradient.tiff",dpi=300,
+ggsave("Output/Appendix_S4_longgradient.tiff",dpi=150,
        width = 166,height=170, unit="mm")
 rm(lrow2, long2016, Wing_full, RGB_full)
 ```
