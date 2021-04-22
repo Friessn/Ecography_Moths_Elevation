@@ -1,24 +1,26 @@
 ---
 title: "AnalysisGeometridNoctuidMothsEcography"
-author: "Lea Heidrich" 
+author: "Lea Heidrich"
 date: "1 Februar 2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 # Description of RData:
 
--   env: environmental variables, see Appendix S1
--   moths\_agg\_fam: community weighted means, environmental variables, number of species, per plot, year and family, including the full gradient in 2016 (27+15 Plots)
--   moths\_agg\_fam\_bal: just as above, but for balanced data (excluding the 15 plots sampled in 2016 only)
--   moths\_M: species matrix, Geometridae & Noctuidae, years seperately (2x27+15 Plots)
--   moths\_M\_bal: just as above, but without the 15 plots sampled in 2016 only
--   species\_lvl: Species sampled in 2016 (full gradient) and 2007 (27+15 Plots) with abundances and habitat availability
--   species\_lvl\_bal: Species equally sampled in 2016 and 2007 (27 Plots)
--   traits: traits extracted from Potocky et al, Altermatt & Pearse and own measurements
--   plots: list of plots sampled equally in both years
+* env:              environmental variables, see Appendix S1
+* moths_agg_fam:    community weighted means, environmental variables, number of species,  per plot, year and family, including the full gradient in 2016 (27+15 Plots) 
+* moths_agg_fam_bal: just as above, but for balanced data (excluding the 15 plots sampled in 2016 only)
+* moths_M:          species matrix, Geometridae & Noctuidae, years seperately (2x27+15 Plots)
+* moths_M_bal:      just as above, but without the 15 plots sampled in 2016 only
+* species_lvl:      Species sampled in 2016 (full gradient) and 2007 (27+15 Plots) with abundances and habitat availability
+* species_lvl_bal:  Species equally sampled in 2016 and 2007 (27 Plots)
+* traits: traits extracted from Potocky et al, Altermatt & Pearse and own measurements
+* plots:            list of plots sampled equally in both years
+
 
 load data and prepare graphical settings
-
 ```{r}
 rm(list=ls())
 library(ggplot2)
@@ -28,12 +30,10 @@ pal <- c( "#67a9cf","#ef8a62")
 
 # Environment
 
-Mean annual temperature and total annual precipitation per site were modelled based on a terrain height model (SRTM), data from 38 climate stations and additional 139 precipitation via extrapolation using ArcEGMO (Becker et al. 2002). Canopy cover was calculated for all single trees with a diameter at breast height of more than 7 cm in an area of 500 m² around site center. For each tree, canopy cover was calculated based on Pretzsch et al. (2002), summed over all species per plot and multiplied by 20 to gain canopy cover per hectare.
+Mean annual temperature and total annual precipitation per site were modelled by based on a terrain height model (SRTM), data from 38 climate stations and additional 139 precipitation via extrapolation using ArcEGMO (Becker et al. 2002). Canoy cover was calculated for all single trees with a breast height dbh of more than 7 cm in an area of 500 m² around site centre. For each tree, canopy cover was calculated  based on Pretzsch et al. (2002), summed over all species per plot and multiplied by 20 to gain canopy cover per hectar
 
-### average values
-
-first line refers to the balances, second line to the full gradient, respectively. Note, that the latter includes modelled environmental information of the year 2007, though they had not been sampled
-
+### average values 
+first line refers to the balances, second line to the full gradient, respectively. Note, that the latter includes modelled environmental information of the year 2007, though they had not been sampled 
 ```{r}
 
 env$year <- as.factor(env$year)
@@ -61,9 +61,9 @@ temp_ele <- ggplot(data=env,
   geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
     geom_point(data=env[!env$Plot%in%plots&env$year==2016,], pch=17)+
   geom_point(data=env[env$Plot%in%plots,], pch=19)+    
-  geom_smooth(data=env[env$Plot%in%plots&env$year==2007,])+
-  geom_smooth(data=env[env$Plot%in%plots&env$year==2016,])+
-  geom_smooth(data=env[env$year==2016,], lty=3)+
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2007,], fill = "#67a9cf")+
+  geom_smooth(data=env[env$Plot%in%plots&env$year==2016,], fill="#ef8a62")+
+  geom_smooth(data=env[env$year==2016,], lty=3, fill="#ef8a62")+
   ylab("MAT (°C)")+
   xlab("")+
   theme(panel.background = element_rect(fill = "white", colour = "black"),
@@ -112,7 +112,7 @@ geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
     geom_smooth(data=env[env$Plot%in%plots&env$year==2007,])+
   geom_smooth(data=env[env$Plot%in%plots&env$year==2016,])+
   geom_smooth(data=env[env$year==2016,], lty=3)+
-  ylab("Crown cover (%)")+
+  ylab("Canopy cover (%)")+
   xlab("Elevation (m a.s.l)")+
   theme(panel.background = element_rect(fill = "white", colour = "black"),
         axis.text = element_text(colour="black"),plot.margin = unit(c(0,0,0,-1), "cm"),
@@ -120,8 +120,7 @@ geom_point(data=env[!env$Plot%in%plots&env$year==2007,], pch=24)+
   guides(size=FALSE)
 
 ```
-
-#### Climate and Canopy Cover between both years (Appendix Figure S1.1, right)
+####  Climate and Canopy Cover between both years (Appendix Figure S1.1, right)
 
 ```{r}
 btemp <-  ggplot(env[env$Plot%in%plots,],
@@ -175,7 +174,7 @@ AppFig1 <-
   cover_ele+bcover+ 
     plot_layout(widths = c(2, 1))
 
-ggsave("Output/Appendix_Figure1.tiff",dpi=900,
+ggsave("Output/Appendix_Figure1.tiff",dpi=300,
        width = 166,height=160, unit="mm")
 
 rm(temp_ele, btemp, precip_ele, bprecip, cover_ele, bcover, AppFig1)
@@ -186,7 +185,6 @@ rm(temp_ele, btemp, precip_ele, bprecip, cover_ele, bcover, AppFig1)
 #### species level differences in colour lightness and wing span between families
 
 t-tests to evaluate the differences in both traits:
-
 ```{r}
 summary(traits$meanRGB);sd(traits$meanRGB)
 t.test(meanRGB~Family,data=traits)
@@ -211,7 +209,8 @@ hRGB <- ggplot(traits,
              aes(xintercept=grp.mean), colour=pal,
              linetype="dashed", lwd = 1.5) +
   scale_fill_manual(breaks = "Family",values = pal)+
-  xlab("meanRGB") +
+  xlab("mean RGB") +
+    ylab("Count") +
   theme_classic()+ theme(legend.position = "none")
 
 hwing <- ggplot(traits, 
@@ -224,13 +223,14 @@ hwing <- ggplot(traits,
              linetype="dashed", color=pal,lwd = 1.5) +
   scale_fill_manual(breaks = "Family",values = pal)+
   xlab("Wing span") +
+      ylab("Count") +
   theme_classic()+ theme(legend.position = "none")
 
 
 hwing+hRGB+  plot_annotation(tag_levels = 'a')
 
 
-ggsave("Output/Main_Figure2.tiff",dpi=900,
+ggsave("Output/Main_Figure2.tiff",dpi=300,
        width = 166,height=80, unit="mm")
 
 rm(hwing, hRGB)
@@ -238,7 +238,8 @@ rm(hwing, hRGB)
 
 ### Differences in life history
 
-traits extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>
+traits extracted from Potocky et al (2018)
+https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291
 
 Kruskal-Wallis test to for differences related to voltinism and overwintering stage and percentages per level. Species which are overwintering as larvae or pupae (in Potocky marked as Overwintering =2.5) were considered as species overwintering as larvae
 
@@ -264,7 +265,6 @@ t[1,]/sum(t[1,]);t[2,]/sum(t[2,])
 ```
 
 graph the results (Appendix Figure S2.1)
-
 ```{r}
 traits$Voltinism <- as.factor(as.character(traits$Voltinism))
 
@@ -291,7 +291,7 @@ bwinter <- ggplot(na.omit(traits[,c("Family", "Overwintering")]),
 
 bvolt+bwinter+  plot_annotation(tag_levels = 'a')
 
-ggsave("Output/Appendix_S2_lifehistory.tiff",dpi=900,
+ggsave("Output/Appendix_S2_lifehistory.tiff",dpi=300,
        width = 166,height=100, unit="mm")
 rm(bvolt, bwinter)
 
@@ -299,10 +299,10 @@ rm(bvolt, bwinter)
 
 ### traits related to feeding
 
-Preferred host plant form, trophic range and whether adults are feeding were extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>. Only three species are not feeding as adults. Thus, differences in adult feeding were not depicted. Information about the number of plant species which the adults visit were taken from Altermatt & Pearse (2011) <https://pubmed.ncbi.nlm.nih.gov/21828993/>
+Preferred host plant form, trophic range and whether adults are feeding were extracted from Potocky et al (2018) https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291. Only three species are not feeding as adults. Thus, differences in adult feeding were not depicted.
+Information about the number of plant species which the adults visit were taken from Altermatt & Pearse (2011) https://pubmed.ncbi.nlm.nih.gov/21828993/
 
 Kruskal-Wallis test to test for differences related to voltinism and overwintering stage and percentages per level. A generalized linear model with poisson distribution was used to test for differences in the number of (nectar) plant species.
-
 ```{r}
 traits$Host_form <- as.factor(as.character(traits$Host_form))
 kruskal.test(Host_form ~ Family,
@@ -367,7 +367,7 @@ bAhost <- ggplot(traits,
 
 
 bhost+btrophic+bAhost+  plot_annotation(tag_levels = 'a')
-ggsave("Output/Appendix_S2_feeding.tiff",dpi=900,
+ggsave("Output/Appendix_S2_feeding.tiff",dpi=300,
        width = 166,height=80, unit="mm")
 
 rm(bhost,btrophic,bAhost)
@@ -375,7 +375,7 @@ rm(bhost,btrophic,bAhost)
 
 ### traits related to habitat / canopy cover
 
-Preferred habitat type were extracted from Potocky et al (2018) <https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291>. Habitat is ranked from 1 = grass- over 2= shrub- to 3 = woodland, though intermediate ranks are also given in Potocky et al (2018). For simplification, we rounded those intermediate levels of for the kruskal-wallis test. To evaluate the effect of preferred habitat type on color lightness and wing span, we simplified these level even more and aggregated the habitat types grass- and shrubland to the category "open habitat". The effect of the preferred habitat type on both traits was tested using a linear model, which included family as interaction term
+Preferred habitat type were extracted from Potocky et al (2018) https://onlinelibrary.wiley.com/doi/epdf/10.1111/icad.12291. Habitat is ranked from 1 =  grass- over 2= shrub- to 3 = woodland, though intermediate ranks are also given in Potocky et al (2018). For simplification, we rounded those intermediate levels of for the kruskal-wallis test. To evaluate the effect of preferred habitat type on color lightness and wing span, we simplified these level even more and aggregated the habitat types grass- and shrubland to the category "open habitat". The effect of the preferred habitat type on both traits was tested using a linear model, which included family as interaction term
 
 ```{r}
 traits[which(findInterval(traits$Habitat_3D, c(1, 1.51))==1L),"Habitat_3D"] <- 1
@@ -431,7 +431,7 @@ habWingFam <- ggplot(aes(y = Wing.span, x = habitat), data = na.omit(traits[,c("
   theme_classic()+ theme(legend.position = "none")
 
 bHab+habWingFam+habcolFam+  plot_annotation(tag_levels = 'a')
-ggsave("Output/Appendix_S2_habitats.tiff",dpi=900,
+ggsave("Output/Appendix_S2_habitats.tiff",dpi=300,
        width = 166,height=80, unit="mm")
 
 rm(bHab, habWingFam,habcolFam)
@@ -451,7 +451,7 @@ HabHost <- ggplot(na.omit(traits[,c("habitat", "Host_form")]),
   xlab("Habitat preference") +
   theme_classic()+ theme(legend.position = "none",axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank())
 
-ggsave("Output/Appendix_HabHost.png",dpi=900,
+ggsave("Output/Appendix_HabHost.png",dpi=300,
        width = 80,height=80, unit="mm")
 rm(HabHost)
 ```
@@ -461,51 +461,72 @@ rm(HabHost)
 The relationship between community-weighted means and elevation was assessed using linear models. Primarily, we wanted to assess whether both families show any significant cline in their community weighted means along elevation (RGB1, Wing1). In a second step, we evaluated whether the slopes differ between both families by evaluating the significance of interaction between elevation and the factor family (RGB2, Wing2). Lastly, we evaluated whether the family-specific slopes change significantly between sampling years (RGB3, Wing3).
 
 ### wing span
-
 ```{r}
 
 moths_agg_fam_bal$year <- as.factor(as.character(moths_agg_fam_bal$year))
 moths_agg_fam_bal$elevation100 <- moths_agg_fam_bal$elevation/100
 
 
+
+
+
+
+
+#check for general trend
+wing.all.int <- lm(wing_w~Family*year*scale(elevation100, scale=F),
+           data =moths_agg_fam_bal)
+summary(wing.all.int)
+
+
+
 # check, whether the slopes per family&year are significant 
 wing1 <- lm(wing_w~Family+year+
-             Family:year:elevation100,
+             Family:year:scale(elevation100, scale=F),
            data =moths_agg_fam_bal)
 summary(wing1) #grp wise slopes + intercepts
 
 
-wing2 <- lm(wing_w~year+Family*elevation100,
+wing2 <- lm(wing_w~ Family+
+             year*Family:scale(elevation100, scale=F), 
            data =moths_agg_fam_bal)
-summary(wing2) # test whether resp. differs between groups (over the years)
+summary(wing2) # test whether resp. within families differs between years
 
-wing3 <- lm(wing_w~ Family+
-             year*Family:elevation100, 
+wing3 <- lm(wing_w~year+Family*scale(elevation100, scale=F),
            data =moths_agg_fam_bal)
-summary(wing3) # test whether resp. within families differs between years
+summary(wing3) # test whether resp. differs between groups (over the years)
+
+
+
 ```
 
 ### color lightness
-
 ```{r}
+
+RGB.all.int <- lm(meanRGB_w~Family*year*scale(elevation100, scale=F),
+           data =moths_agg_fam_bal)
+summary(RGB.all.int)
+
 RGB1 <- lm(meanRGB_w~Family+year+
-             Family:year:elevation100,
+             Family:year:scale(elevation100, scale=F),
            data =moths_agg_fam_bal)
 summary(RGB1) #grp wise slopes + intercepts
 
-RGB2 <- lm(meanRGB_w~year+Family*elevation100,
-           data =moths_agg_fam_bal)
-summary(RGB2) # test whether resp. differs between groups (over the years)
 
-RGB3 <- lm(meanRGB_w~ Family+
-             year*Family:elevation100, 
+RGB2 <- lm(meanRGB_w~ Family+
+               year*Family:scale(elevation100, scale=F), 
            data =moths_agg_fam_bal)
-summary(RGB3)
+summary(RGB2)
+
+
+RGB3 <- lm(meanRGB_w~year+Family*scale(elevation100, scale=F),
+           data =moths_agg_fam_bal)
+summary(RGB3) # test whether resp. differs between groups (over the years)
+
+
 
 ```
 
 plot cwm along elevation
-
 ```{r}
 Wing_bal <- ggplot(data=moths_agg_fam_bal, 
              aes(elevation, wing_w,colour=Family)) + geom_point(aes(size = nspec, pch=year)) +
@@ -535,6 +556,7 @@ RGB_bal <- ggplot(data=moths_agg_fam_bal,
         axis.text = element_text(colour="black"))
 ```
 
+
 test for differances in average colour lightness between both years
 
 ```{r}
@@ -547,14 +569,15 @@ t.test(wing_w~year, data =moths_agg_fam_bal[moths_agg_fam_bal$Family=="Geometrid
 
 ```
 
-plot differences between the years
 
+plot differences between the years
 ```{r}
 Wing_year <- ggplot(moths_agg_fam_bal,
              aes(x=year, y=wing_w, fill=Family)) + 
   scale_fill_manual(values = pal) +
   scale_y_continuous(breaks = seq(25, 45, by = 5), limits = c(24,46))+
   ylab("")+
+    xlab("Year")+
   geom_boxplot(position=position_dodge(0.3))+
   guides(fill = "legend")+
   theme(panel.background = element_rect(fill = "white", colour = "black"),
@@ -565,6 +588,7 @@ RGB_year <- ggplot(moths_agg_fam_bal,
   scale_fill_manual(values = pal) +
   scale_y_continuous(breaks = seq(0.45, 0.65, by = 0.05), limits = c(0.43,0.67))+
   ylab("")+
+      xlab("Year")+
   geom_boxplot(position=position_dodge(0.3))+
   guides(fill = "legend")+
   theme(panel.background = element_rect(fill = "white", colour = "black"),
@@ -572,8 +596,8 @@ RGB_year <- ggplot(moths_agg_fam_bal,
 
 ```
 
-combine figures (Main Figure 3)
 
+combine figures (Main Figure 3)
 ```{r}
 library(cowplot)
 
@@ -596,25 +620,27 @@ lrow <- plot_grid(legend_b, legend_p, ncol = 2)
 
 f2 <- plot_grid(prow, lrow,ncol = 1, rel_heights = c(1, .1))
 
-ggsave("Output/Main_Figure3.png",dpi=900,
+ggsave("Output/Main_Figure3.tiff",dpi=300,
        width = 166,height=170, unit="mm")
 
 ```
 
 ### test the cwm along elevation for the full gradient sampled in 2016
 
-first row: test whether the family-specific slopes differs significantly from zero. second row: test whether families differ in slopes
+first row: test whether the family-specific slopes differs significantly from zero.
+second row: test whether families differ in slopes
 
 ```{r}
-summary(lm(wing_w~Family+Family:elevation,data=moths_agg_fam[moths_agg_fam$year==2016,]))
-summary(lm(wing_w~elevation*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
 
-summary(lm(meanRGB_w~Family+Family:elevation,data=moths_agg_fam[moths_agg_fam$year==2016,]))
-summary(lm(meanRGB_w~elevation*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+moths_agg_fam$elevation100 <- moths_agg_fam$elevation/100
+
+summary(lm(wing_w~Family+Family:scale(elevation100, scale=F),data=moths_agg_fam[moths_agg_fam$year==2016,]))
+summary(lm(wing_w~scale(elevation100, scale=F)*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
+
+summary(lm(meanRGB_w~Family+Family:scale(elevation100, scale=F),data=moths_agg_fam[moths_agg_fam$year==2016,]))
+summary(lm(meanRGB_w~scale(elevation100, scale=F)*Family,data=moths_agg_fam[moths_agg_fam$year==2016,]))
 ```
-
 full gradient plot
-
 ```{r}
 
 moths_agg_fam$gradient <- "full"
@@ -660,15 +686,15 @@ long2016 <- plot_grid(Wing_full+ theme(legend.position="none"), RGB_full+ theme(
 long2016 <- plot_grid(long2016, lrow2,ncol = 1, rel_heights = c(1, .1))
 long2016
 
-ggsave("Output/Appendix_S4_longgradient.tiff",dpi=900,
+ggsave("Output/Appendix_S4_longgradient.tiff",dpi=300,
        width = 166,height=170, unit="mm")
 rm(lrow2, long2016, Wing_full, RGB_full)
 ```
 
+
+
 ## hierarchial partitioning
-
 we conducted hierarchial partitioning to estimate the relative importance of the co-varying environmental variables on the color lightness and body size of geometrid and noctuid moth assemblages
-
 ```{r}
 
 #install.packages("hier.part")
@@ -678,7 +704,7 @@ moths_agg_fam_bal$c_precipitation <- scale(moths_agg_fam_bal$precipitation)
 moths_agg_fam_bal$c_crown_cover_ha <- scale(moths_agg_fam_bal$crown_cover_ha)
 
 Noctuid <- droplevels(moths_agg_fam_bal[moths_agg_fam_bal$Family=="Noctuidae",])
-hipaWing_Noc <- hier.part(Noctuid$wing_w, Noctuid[,c("c_temperature_year", "c_precipitation", "c_crown_cover_ha")])
+hipaWing_Noc <- hier.part(Noctuid$wing_w, Noctuid[,c("temperature_year", "precipitation", "crown_cover_ha")])
 hipaRGB_Noc <- hier.part(Noctuid$wing_w, Noctuid[,c("temperature_year", "precipitation", "crown_cover_ha")])
 
 
@@ -688,6 +714,7 @@ hipaRGB_Geo <- hier.part(Geometrid$wing_w, Geometrid[,c("temperature_year", "pre
 ```
 
 # 4th corner analysis
+
 
 ```{r}
 library(ade4)
@@ -741,6 +768,7 @@ summary(fcN16)
 
 the full gradient
 
+
 ```{r}
 
 LG16 <- moths_M[moths_M$year==2016,names(moths_M)%in%c("Plot",Geo)]
@@ -765,10 +793,10 @@ summary(fcN16)
 
 ```
 
+
 # SPECIES-LVL MODELL
 
 #### Datapreparation
-
 to simplify / speed up model covergence, environmental variables were converted to be in a similar range. Moreover, we excluded all species occuring in less than three plots per year.
 
 ```{r}
@@ -802,7 +830,6 @@ species_lvl_bal <- species_lvl_bal[!is.na(species_lvl_bal$hab_av),]
 in a next step, we modelled abundance along elevation to check, whether we can assume linear relationships in the analysis
 
 ```{r}
-
 library("mgcv")
 library("mgcViz")
 
@@ -836,11 +863,10 @@ plot(pen16, select = 1) + l_points() + l_fitLine() + l_ciLine()+ylim(-8,10)
 ```
 
 ### model for the balanced data
-
 ```{r}
 library(glmmTMB)
 tnbin2_orig <-  glmmTMB(abundance ~  
-                        year+Family+ #collinearity problems....sollte aber eigtl rein
+                        year+Family+ 
                     year:Family:c_hab_av100+ 
                     year:Family:c_elevation100+ 
                     c_Wing.span:year:Family:c_elevation100+                               c_meanRGB:year:Family:c_elevation100+(1|Species),
@@ -849,9 +875,10 @@ tnbin2_orig <-  glmmTMB(abundance ~
 summary(tnbin2_orig)
 ```
 
-### model for full gradient 2016
 
+### model for full gradient 2016
 here, only species used in the balanced analysis were included
+
 
 ```{r}
 
